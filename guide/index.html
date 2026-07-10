@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beamo — How to Use</title>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#09090b;--bg-2:#18181b;--bg-3:#1c1c1f;
+      --border:#27272a;--border-dim:#1f1f22;
+      --text:#fafafa;--text-2:#d4d4d8;--text-3:#a1a1aa;--text-4:#71717a;--text-5:#52525b;
+      --accent:#22d3ee;--accent-dim:rgba(34,211,238,0.10);--accent-border:rgba(34,211,238,0.25);
+      --success:#4ade80;--danger:#f87171;
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+    }
+    body{background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;line-height:1.6;}
+    .container{max-width:780px;margin:0 auto;padding:0 24px;}
+
+    /* Nav */
+    nav{border-bottom:1px solid var(--border-dim);padding:16px 0;}
+    .nav-in{display:flex;align-items:center;gap:10px;}
+    .logo-mark{width:28px;height:28px;background:var(--accent);border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .logo-mark svg{width:15px;height:15px;}
+    .logo-name{font-size:15px;font-weight:700;letter-spacing:-0.03em;}
+    .logo-slash{color:var(--text-5);margin:0 4px;}
+    .logo-page{font-size:15px;color:var(--text-4);}
+
+    /* Hero */
+    .hero{padding:60px 0 48px;border-bottom:1px solid var(--border-dim);}
+    .hero-tag{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);font-weight:600;margin-bottom:14px;}
+    .hero-h1{font-size:clamp(28px,5vw,44px);font-weight:800;letter-spacing:-0.04em;line-height:1.1;margin-bottom:14px;}
+    .hero-sub{font-size:16px;color:var(--text-3);max-width:520px;line-height:1.65;}
+
+    /* Quick summary */
+    .summary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;padding:40px 0;border-bottom:1px solid var(--border-dim);}
+    @media(max-width:640px){.summary{grid-template-columns:1fr;}}
+    .summary-card{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;padding:18px;}
+    .summary-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;}
+    .summary-icon svg{width:18px;height:18px;}
+    .i-cyan{background:var(--accent-dim);color:var(--accent);}
+    .i-green{background:rgba(74,222,128,0.1);color:var(--success);}
+    .i-purple{background:rgba(167,139,250,0.1);color:#a78bfa;}
+    .summary-title{font-size:14px;font-weight:700;letter-spacing:-0.02em;margin-bottom:4px;}
+    .summary-desc{font-size:12px;color:var(--text-4);line-height:1.5;}
+
+    /* Sections */
+    .section{padding:48px 0;border-bottom:1px solid var(--border-dim);}
+    .section:last-child{border-bottom:none;}
+    .section-num{font-size:11px;text-transform:uppercase;letter-spacing:0.12em;color:var(--accent);font-weight:600;margin-bottom:10px;}
+    .section-h2{font-size:24px;font-weight:800;letter-spacing:-0.04em;margin-bottom:8px;}
+    .section-sub{font-size:14px;color:var(--text-3);margin-bottom:28px;line-height:1.6;}
+
+    /* Steps */
+    .steps{display:flex;flex-direction:column;gap:0;}
+    .step{display:flex;gap:20px;padding:20px 0;position:relative;}
+    .step:not(:last-child)::after{content:'';position:absolute;left:19px;top:60px;bottom:0;width:1px;background:var(--border-dim);}
+    .step-num{width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--bg-2);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:var(--accent);flex-shrink:0;position:relative;z-index:1;}
+    .step-body{padding-top:6px;flex:1;}
+    .step-title{font-size:16px;font-weight:700;letter-spacing:-0.02em;margin-bottom:5px;}
+    .step-desc{font-size:14px;color:var(--text-3);line-height:1.65;}
+    .step-img{margin-top:14px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:16px;font-size:13px;color:var(--text-4);}
+    .step-tip{display:flex;align-items:flex-start;gap:8px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:8px;padding:10px 12px;margin-top:10px;font-size:13px;color:var(--text-2);line-height:1.5;}
+    .step-tip svg{width:14px;height:14px;color:var(--accent);flex-shrink:0;margin-top:1px;}
+
+    /* Device grid */
+    .device-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin-top:16px;}
+    @media(max-width:500px){.device-grid{grid-template-columns:1fr;}}
+    .device-row{display:flex;align-items:center;gap:12px;background:var(--bg-2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;}
+    .device-icon{width:34px;height:34px;border-radius:8px;background:var(--bg-3);border:1px solid var(--border-dim);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .device-icon svg{width:17px;height:17px;color:var(--text-3);}
+    .device-name{font-size:13px;font-weight:600;color:var(--text);}
+    .device-note{font-size:11px;color:var(--text-4);}
+    .check{width:16px;height:16px;color:var(--success);margin-left:auto;flex-shrink:0;}
+
+    /* FAQ */
+    .faq{display:flex;flex-direction:column;gap:12px;margin-top:8px;}
+    .faq-item{background:var(--bg-2);border:1px solid var(--border);border-radius:12px;overflow:hidden;}
+    .faq-q{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;font-size:14px;font-weight:600;cursor:pointer;user-select:none;gap:12px;}
+    .faq-q svg{width:16px;height:16px;color:var(--text-4);flex-shrink:0;transition:transform 0.2s ease;}
+    .faq-item.open .faq-q svg{transform:rotate(180deg);}
+    .faq-a{display:none;padding:0 18px 16px;font-size:14px;color:var(--text-3);line-height:1.65;}
+    .faq-item.open .faq-a{display:block;}
+
+    /* CTA */
+    .cta-box{background:var(--bg-2);border:1px solid var(--border);border-radius:16px;padding:32px;text-align:center;margin-top:48px;}
+    .cta-title{font-size:22px;font-weight:800;letter-spacing:-0.04em;margin-bottom:8px;}
+    .cta-sub{font-size:14px;color:var(--text-3);margin-bottom:24px;}
+    .cta-actions{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;}
+    .btn-primary{background:var(--accent);color:#000;font-size:14px;font-weight:700;padding:12px 22px;border-radius:9px;text-decoration:none;transition:opacity 0.16s ease,transform 0.16s ease;}
+    .btn-primary:hover{opacity:0.88;}
+    .btn-primary:active{transform:scale(0.97);}
+    .btn-ghost{background:transparent;color:var(--text-2);font-size:14px;font-weight:500;padding:12px 22px;border-radius:9px;text-decoration:none;border:1px solid var(--border);transition:border-color 0.2s ease;}
+    .btn-ghost:hover{border-color:var(--text-4);}
+
+    footer{padding:32px 0;border-top:1px solid var(--border-dim);margin-top:48px;}
+    .footer-in{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;}
+    .footer-logo{display:flex;align-items:center;gap:7px;font-size:13px;font-weight:600;color:var(--text-4);text-decoration:none;}
+    .footer-copy{font-size:12px;color:var(--text-5);}
+  </style>
+</head>
+<body>
+
+<nav>
+  <div class="container">
+    <div class="nav-in">
+      <div class="logo-mark">
+        <svg viewBox="0 0 15 15" fill="none"><path d="M7.5 2.5C4.9 2.5 2.6 3.8 1.2 5.8L2.6 6.8C3.7 5.2 5.5 4.2 7.5 4.2C9.5 4.2 11.3 5.2 12.4 6.8L13.8 5.8C12.4 3.8 10.1 2.5 7.5 2.5Z" fill="#000"/><path d="M7.5 5.8C6 5.8 4.6 6.5 3.7 7.6L5.1 8.6C5.7 7.8 6.5 7.5 7.5 7.5C8.5 7.5 9.3 7.8 9.9 8.6L11.3 7.6C10.4 6.5 9 5.8 7.5 5.8Z" fill="#000"/><circle cx="7.5" cy="11.5" r="1.8" fill="#000"/></svg>
+      </div>
+      <span class="logo-name">Beamo</span>
+      <span class="logo-slash">/</span>
+      <span class="logo-page">How to Use</span>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <div class="hero">
+    <div class="hero-tag">User Guide</div>
+    <h1 class="hero-h1">How to share your screen with Beamo</h1>
+    <p class="hero-sub">Simple step-by-step guide. If you can open a website, you can use Beamo. No downloads, no accounts, no technical knowledge needed.</p>
+  </div>
+
+  <div class="summary">
+    <div class="summary-card">
+      <div class="summary-icon i-cyan">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      </div>
+      <div class="summary-title">Broadcaster (the Mac/PC)</div>
+      <div class="summary-desc">Needs Chrome or Edge browser. That's it. One click to start.</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon i-green">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg>
+      </div>
+      <div class="summary-title">Viewers (any device)</div>
+      <div class="summary-desc">Any phone, tablet, laptop, or TV with any browser. No install needed — ever.</div>
+    </div>
+    <div class="summary-card">
+      <div class="summary-icon i-purple">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>
+      </div>
+      <div class="summary-title">Total setup time</div>
+      <div class="summary-desc">Under 30 seconds from clicking Start Sharing to viewers seeing the screen.</div>
+    </div>
+  </div>
+
+  <!-- PART 1: BROADCASTER -->
+  <div class="section">
+    <div class="section-num">Part 1 of 2</div>
+    <h2 class="section-h2">For the person sharing their screen</h2>
+    <p class="section-sub">Do this on the Mac or PC whose screen you want to show to others.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Open Chrome or Edge browser</div>
+          <div class="step-desc">Screen sharing only works in Chrome or Edge. It will NOT work in Safari or Firefox. If you don't have Chrome, download it free at <strong>google.com/chrome</strong>.</div>
+          <div class="step-tip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            If you see a yellow warning bar at the top of the page, you are in Safari — switch to Chrome.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Go to beamo.imazyn.com</div>
+          <div class="step-desc">Type <strong>beamo.imazyn.com</strong> in the address bar and press Enter. You will see the Beamo home page with a big cyan "Start Sharing" button.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">Click "Start Sharing"</div>
+          <div class="step-desc">A dialog box will appear asking what you want to share. You can choose your entire screen, a specific window, or a browser tab.</div>
+          <div class="step-tip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            For presentations, select "Entire Screen" so viewers see everything you do.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">4</div>
+        <div class="step-body">
+          <div class="step-title">Share the Room Code or QR Code</div>
+          <div class="step-desc">After you click Share, a 6-character Room Code appears (like <strong style="color:var(--accent);font-family:monospace;letter-spacing:0.08em;">MX7K2P</strong>) along with a QR code. Tell viewers the code or let them scan the QR code with their phone camera.</div>
+          <div class="step-tip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            Click "Copy link" to copy the viewer URL and paste it in WhatsApp, email, or a chat — viewers just tap the link.
+          </div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">5</div>
+        <div class="step-body">
+          <div class="step-title">Done — your screen is live!</div>
+          <div class="step-desc">The page shows how many viewers are connected. When you are finished, click "Stop Sharing" or just close the browser tab.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PART 2: VIEWER -->
+  <div class="section">
+    <div class="section-num">Part 2 of 2</div>
+    <h2 class="section-h2">For viewers (anyone watching)</h2>
+    <p class="section-sub">Do this on any phone, tablet, laptop, or smart TV. No app install needed.</p>
+
+    <div class="steps">
+      <div class="step">
+        <div class="step-num">1</div>
+        <div class="step-body">
+          <div class="step-title">Option A — Scan the QR Code</div>
+          <div class="step-desc">Open your phone camera and point it at the QR code on the broadcaster's screen. A link will appear — tap it. You will go directly to the viewer page with the code already filled in.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">2</div>
+        <div class="step-body">
+          <div class="step-title">Option B — Open the link or type the code</div>
+          <div class="step-desc">If someone sent you a link, just tap it. Or go to <strong>beamo.imazyn.com/viewer.html</strong> in any browser and type the 6-character code when asked.</div>
+        </div>
+      </div>
+
+      <div class="step">
+        <div class="step-num">3</div>
+        <div class="step-body">
+          <div class="step-title">The screen appears</div>
+          <div class="step-desc">Within a few seconds you will see the broadcaster's screen live on your device. Use the buttons at the bottom-right to go fullscreen, mute, or disconnect.</div>
+          <div class="step-tip">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+            On iPhone: if you see "Tap to unmute", tap anywhere on the screen to enable sound. This is an iPhone security feature.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h3 style="font-size:15px;font-weight:700;margin:28px 0 14px;letter-spacing:-0.02em;">Works on all these devices — no install required:</h3>
+    <div class="device-grid">
+      <div class="device-row">
+        <div class="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg></div>
+        <div><div class="device-name">iPhone (any model)</div><div class="device-note">Safari or Chrome — both work</div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="device-row">
+        <div class="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="5" y="2" width="14" height="20" rx="2"/><circle cx="12" cy="17" r="1"/></svg></div>
+        <div><div class="device-name">Android Phone</div><div class="device-note">Chrome or Samsung Browser</div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="device-row">
+        <div class="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="4" width="20" height="16" rx="2"/><circle cx="12" cy="18" r="0.5" fill="currentColor"/></svg></div>
+        <div><div class="device-name">iPad</div><div class="device-note">Safari — works great</div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="device-row">
+        <div class="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div><div class="device-name">Windows Laptop</div><div class="device-note">Chrome or Edge</div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="device-row">
+        <div class="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="7" width="20" height="15" rx="2"/><path d="M16.5 7V5a2 2 0 0 0-9 0v2"/></svg></div>
+        <div><div class="device-name">Smart TV</div><div class="device-note">Built-in browser</div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+      <div class="device-row">
+        <div class="device-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+        <div><div class="device-name">Chromebook</div><div class="device-note">Chrome — works perfectly</div></div>
+        <svg class="check" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- FAQ -->
+  <div class="section">
+    <div class="section-num">Common Questions</div>
+    <h2 class="section-h2">Frequently asked questions</h2>
+    <p class="section-sub">Quick answers to things people usually ask.</p>
+
+    <div class="faq">
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Why does the "Start Sharing" button not work in Safari?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Apple's Safari browser does not support the screen capture feature needed for broadcasting. Viewers can use Safari, but the person sharing their screen must use Chrome or Edge. Both are free to download.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          How many people can watch at the same time?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Up to 50 viewers can watch simultaneously. This covers classrooms, conference rooms, training sessions, and most real-world use cases comfortably.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Does the screen look blurry or laggy?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">Quality depends on your internet connection. On a good WiFi or 4G connection, viewers see a sharp, full-resolution stream with less than half a second of delay. On a slow connection, the system automatically adjusts quality to keep things smooth.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Is my screen recorded or stored anywhere?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">No. Beamo does not record or store your screen. The video goes directly from your computer to the viewers and is never saved anywhere. The server only handles the connection — not the video itself.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          The screen shows "Waiting for broadcaster" — what do I do?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">You have joined the room successfully, but the broadcaster has not started sharing yet. Ask them to click "Start Sharing" on their computer. The screen will appear on your device automatically — no need to refresh.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          My iPhone says "Tap to unmute" — is something broken?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">This is normal on iPhone and iPad. Apple requires a user tap before any video can play with sound. Just tap anywhere on the screen and the audio will turn on immediately.</div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-q" onclick="toggleFaq(this)">
+          Do viewers need to be on the same WiFi as the broadcaster?
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+        </div>
+        <div class="faq-a">No. Viewers can be anywhere with an internet connection — same room, different office, or different country. As long as they have the room code or link, they can join.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta-box">
+    <div class="cta-title">Ready to share?</div>
+    <div class="cta-sub">Open the broadcaster on your Mac or PC to get started.</div>
+    <div class="cta-actions">
+      <a href="/broadcaster.html" class="btn-primary">Open Broadcaster</a>
+      <a href="/viewer.html" class="btn-ghost">Open Viewer</a>
+    </div>
+  </div>
+
+</div>
+
+<footer>
+  <div class="container">
+    <div class="footer-in">
+      <a href="/" class="footer-logo">
+        <div class="logo-mark" style="width:20px;height:20px;border-radius:5px;">
+          <svg viewBox="0 0 15 15" fill="none" style="width:11px;height:11px;"><path d="M7.5 2.5C4.9 2.5 2.6 3.8 1.2 5.8L2.6 6.8C3.7 5.2 5.5 4.2 7.5 4.2C9.5 4.2 11.3 5.2 12.4 6.8L13.8 5.8C12.4 3.8 10.1 2.5 7.5 2.5Z" fill="#000"/><path d="M7.5 5.8C6 5.8 4.6 6.5 3.7 7.6L5.1 8.6C5.7 7.8 6.5 7.5 7.5 7.5C8.5 7.5 9.3 7.8 9.9 8.6L11.3 7.6C10.4 6.5 9 5.8 7.5 5.8Z" fill="#000"/><circle cx="7.5" cy="11.5" r="1.8" fill="#000"/></svg>
+        </div>
+        Beamo
+      </a>
+      <div class="footer-copy">beamo.imazyn.com</div>
+    </div>
+  </div>
+</footer>
+
+<script>
+  function toggleFaq(el) {
+    el.parentElement.classList.toggle('open');
+  }
+</script>
+</body>
+</html>

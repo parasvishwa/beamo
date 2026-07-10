@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beamo — Broadcaster</title>
+  <script src="https://cdn.jsdelivr.net/npm/livekit-client@1/dist/livekit-client.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+    :root{
+      --bg:#09090b;--bg-2:#18181b;--bg-3:#1c1c1f;
+      --border:#27272a;--border-dim:#1f1f22;
+      --text:#fafafa;--text-3:#a1a1aa;--text-4:#71717a;--text-5:#52525b;
+      --accent:#22d3ee;--accent-dim:rgba(34,211,238,0.10);--accent-border:rgba(34,211,238,0.25);
+      --danger:#f87171;--success:#4ade80;--warning:#fbbf24;
+      --font:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+      --mono:'SF Mono','Fira Code',monospace;
+      --ease:cubic-bezier(0.23,1,0.32,1);
+    }
+    html,body{height:100%;}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);-webkit-font-smoothing:antialiased;display:flex;flex-direction:column;}
+    nav{height:52px;border-bottom:1px solid var(--border-dim);display:flex;align-items:center;justify-content:space-between;padding:0 20px;flex-shrink:0;background:rgba(9,9,11,0.9);backdrop-filter:blur(12px);}
+    .logo{display:flex;align-items:center;gap:8px;font-size:14px;font-weight:700;letter-spacing:-0.03em;color:var(--text);text-decoration:none;}
+    .logo-mark{width:24px;height:24px;background:var(--accent);border-radius:6px;display:flex;align-items:center;justify-content:center;}
+    .logo-mark svg{width:13px;height:13px;}
+    .status-pill{display:flex;align-items:center;gap:6px;background:var(--bg-2);border:1px solid var(--border);border-radius:20px;padding:5px 12px;font-size:12px;color:var(--text-4);}
+    .status-dot{width:6px;height:6px;border-radius:50%;background:var(--text-5);transition:background 0.3s ease;}
+    .status-dot.connected{background:var(--success);animation:blink 2s ease infinite;}
+    .status-dot.connecting{background:var(--accent);animation:blink 0.8s ease infinite;}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
+    main{flex:1;display:flex;align-items:center;justify-content:center;padding:24px;}
+    #browser-warn{display:none;width:100%;max-width:480px;background:rgba(251,191,36,0.08);border:1px solid rgba(251,191,36,0.3);border-radius:10px;padding:14px 16px;margin-bottom:20px;font-size:13px;color:var(--warning);align-items:flex-start;gap:10px;}
+    #browser-warn svg{width:16px;height:16px;flex-shrink:0;margin-top:1px;}
+    #browser-warn.show{display:flex;}
+    #idle-screen{display:flex;flex-direction:column;align-items:center;text-align:center;max-width:480px;}
+    .idle-icon{width:72px;height:72px;border-radius:18px;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;margin-bottom:24px;}
+    .idle-icon svg{width:32px;height:32px;color:var(--accent);}
+    .idle-h1{font-size:26px;font-weight:800;letter-spacing:-0.04em;margin-bottom:10px;}
+    .idle-sub{font-size:14px;color:var(--text-3);line-height:1.6;margin-bottom:20px;}
+
+    /* Mode Toggle */
+    .mode-toggle{display:flex;background:var(--bg-3);border:1px solid var(--border);border-radius:10px;padding:4px;gap:4px;margin-bottom:20px;width:100%;}
+    .mode-btn{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;padding:10px 8px;border-radius:7px;border:none;background:transparent;cursor:pointer;transition:background 0.18s ease,color 0.18s ease;color:var(--text-4);}
+    .mode-btn.active{background:var(--bg-2);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,0.4);}
+    .mode-btn-label{font-size:13px;font-weight:700;letter-spacing:-0.02em;}
+    .mode-btn-sub{font-size:10px;color:var(--text-5);letter-spacing:0.02em;}
+    .mode-btn.active .mode-btn-sub{color:var(--text-4);}
+    .res-row{display:flex;align-items:center;gap:8px;margin-top:10px;}
+    .res-label{font-size:11px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-5);font-weight:600;white-space:nowrap;}
+    .res-btns{display:flex;gap:6px;flex:1;}
+    .res-btn{flex:1;padding:7px 0;border-radius:7px;border:1px solid var(--border);background:transparent;color:var(--text-4);font-size:12px;font-weight:700;cursor:pointer;transition:all 0.15s ease;letter-spacing:0.02em;}
+    .res-btn.active{background:var(--accent-dim);border-color:var(--accent-border);color:var(--accent);}
+    .res-btn:hover:not(.active){border-color:var(--text-5);color:var(--text-3);}
+    .mode-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 5px;border-radius:3px;letter-spacing:0.04em;text-transform:uppercase;margin-left:4px;}
+    .badge-webrtc{background:rgba(34,211,238,0.15);color:var(--accent);}
+    .badge-jpeg{background:rgba(251,191,36,0.15);color:var(--warning);}
+
+    .btn-start{display:flex;align-items:center;justify-content:center;gap:8px;background:var(--accent);color:#000;font-size:15px;font-weight:700;padding:14px 28px;border-radius:10px;border:none;cursor:pointer;letter-spacing:-0.02em;transition:transform 0.16s var(--ease),opacity 0.16s ease,box-shadow 0.2s ease;width:100%;}
+    .btn-start:hover{opacity:0.88;box-shadow:0 0 24px rgba(34,211,238,0.25);}
+    .btn-start:active{transform:scale(0.97);}
+    .btn-start:disabled{opacity:0.4;cursor:not-allowed;transform:none;}
+    .btn-start svg{width:16px;height:16px;flex-shrink:0;}
+    .step-status{font-size:13px;color:var(--text-4);margin-top:14px;min-height:20px;text-align:center;}
+    .idle-reqs{display:flex;flex-direction:column;gap:8px;margin-top:20px;width:100%;}
+    .idle-req{display:flex;align-items:flex-start;gap:10px;background:var(--bg-2);border:1px solid var(--border-dim);border-radius:8px;padding:10px 14px;font-size:13px;color:var(--text-3);text-align:left;}
+    .idle-req svg{width:14px;height:14px;color:var(--text-5);flex-shrink:0;margin-top:1px;}
+    #sharing-screen{display:none;width:100%;max-width:900px;flex-direction:column;gap:16px;}
+    #sharing-screen.active{display:flex;animation:fadeUp 0.4s var(--ease);}
+    @keyframes fadeUp{from{opacity:0;transform:translateY(16px);}}
+    .grid-2x2{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+    @media(max-width:640px){.grid-2x2{grid-template-columns:1fr;}}
+    .card{background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:20px;position:relative;overflow:hidden;}
+    .card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(to right,transparent,rgba(255,255,255,0.04),transparent);}
+    .card-label{font-size:10px;text-transform:uppercase;letter-spacing:0.12em;color:var(--text-5);font-weight:600;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;}
+    .room-code-display{font-size:48px;font-weight:800;letter-spacing:0.08em;color:var(--accent);font-variant-numeric:tabular-nums;font-family:var(--mono);line-height:1;margin-bottom:14px;}
+    .viewers-row{display:flex;align-items:center;gap:8px;background:var(--bg-3);border:1px solid var(--border-dim);border-radius:8px;padding:9px 12px;}
+    .viewer-dot{width:6px;height:6px;border-radius:50%;background:var(--success);animation:blink 1.5s ease infinite;}
+    .viewers-count{font-size:13px;color:var(--text);font-weight:600;}
+    .viewers-label{font-size:13px;color:var(--text-4);}
+    .viewer-pills{display:flex;gap:4px;margin-left:auto;}
+    .pill{width:20px;height:20px;border-radius:50%;background:var(--bg-3);border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;}
+    .pill svg{width:10px;height:10px;color:var(--text-4);}
+    #qr-container{display:flex;justify-content:center;border-radius:8px;overflow:hidden;background:#fff;padding:8px;}#qr-container canvas,#qr-container img{max-width:100%;height:auto!important;}
+    .viewer-url-wrap{margin-top:10px;}
+    .viewer-url-label{font-size:10px;text-transform:uppercase;letter-spacing:0.1em;color:var(--text-5);font-weight:600;margin-bottom:4px;}
+    .viewer-url{font-size:11px;color:var(--text-4);font-family:var(--mono);word-break:break-all;line-height:1.5;}
+    .copy-btn{display:inline-flex;align-items:center;gap:4px;background:var(--bg-3);border:1px solid var(--border-dim);border-radius:5px;padding:3px 8px;font-size:11px;color:var(--text-3);cursor:pointer;margin-top:6px;transition:background 0.2s ease;}
+    .copy-btn:active{transform:scale(0.96);}
+    .copy-btn svg{width:11px;height:11px;}
+    .steps{display:flex;flex-direction:column;gap:10px;}
+    .step{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--text-3);}
+    .step-n{width:20px;height:20px;border-radius:50%;background:var(--accent-dim);border:1px solid var(--accent-border);display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:var(--accent);flex-shrink:0;margin-top:1px;}
+    .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+    .stat{background:var(--bg-3);border:1px solid var(--border-dim);border-radius:8px;padding:10px 12px;}
+    .stat-val{font-size:14px;font-weight:700;color:var(--text);font-family:var(--mono);}
+    .stat-name{font-size:10px;color:var(--text-5);margin-top:2px;text-transform:uppercase;letter-spacing:0.08em;}
+    .live-badge{display:inline-flex;align-items:center;gap:5px;background:var(--accent-dim);border:1px solid var(--accent-border);border-radius:20px;padding:3px 9px;font-size:10px;font-weight:700;color:var(--accent);letter-spacing:0.06em;}
+    .toolbar{display:flex;align-items:center;justify-content:space-between;background:var(--bg-2);border:1px solid var(--border);border-radius:14px;padding:14px 20px;}
+    .timer{font-size:22px;font-weight:700;font-family:var(--mono);color:var(--text);letter-spacing:0.05em;}
+    .timer-label{font-size:11px;color:var(--text-5);margin-top:2px;}
+    .btn-stop{display:flex;align-items:center;gap:7px;background:rgba(248,113,113,0.08);border:1px solid rgba(248,113,113,0.3);border-radius:8px;color:var(--danger);font-size:14px;font-weight:600;padding:10px 18px;cursor:pointer;transition:background 0.2s ease,transform 0.16s ease;}
+    .btn-stop:hover{background:rgba(248,113,113,0.15);}
+    .btn-stop:active{transform:scale(0.97);}
+    .btn-stop svg{width:14px;height:14px;}
+    #error-toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:#1a0a0a;border:1px solid rgba(248,113,113,0.4);border-radius:10px;padding:12px 20px;font-size:13px;color:var(--danger);display:none;z-index:999;max-width:90vw;text-align:center;}
+    #error-toast.show{display:block;animation:slideup 0.3s var(--ease);}
+    @keyframes slideup{from{transform:translateX(-50%) translateY(12px);opacity:0;}}
+  </style>
+</head>
+<body>
+<nav>
+  <a href="/landing/" class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 15 15" fill="none"><path d="M7.5 2.5C4.9 2.5 2.6 3.8 1.2 5.8L2.6 6.8C3.7 5.2 5.5 4.2 7.5 4.2C9.5 4.2 11.3 5.2 12.4 6.8L13.8 5.8C12.4 3.8 10.1 2.5 7.5 2.5Z" fill="#000"/><path d="M7.5 5.8C6 5.8 4.6 6.5 3.7 7.6L5.1 8.6C5.7 7.8 6.5 7.5 7.5 7.5C8.5 7.5 9.3 7.8 9.9 8.6L11.3 7.6C10.4 6.5 9 5.8 7.5 5.8Z" fill="#000"/><circle cx="7.5" cy="11.5" r="1.8" fill="#000"/></svg>
+    </div>
+    Beamo
+  </a>
+  <div class="status-pill">
+    <div class="status-dot" id="status-dot"></div>
+    <span id="status-label">Ready</span>
+  </div>
+</nav>
+<main>
+  <div id="idle-screen">
+    <div id="browser-warn">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+      <div><strong>Safari not supported for broadcasting.</strong> Please open this page in Chrome or Edge.</div>
+    </div>
+    <div class="idle-icon">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/><path d="M17 10l-5-5-5 5"/><path d="M12 5v9"/></svg>
+    </div>
+    <h1 class="idle-h1">Share your screen</h1>
+    <p class="idle-sub">Choose a streaming mode, then viewers join from any device — no app needed.</p>
+
+    <div class="mode-toggle">
+      <button class="mode-btn active" data-mode="webrtc" onclick="selectMode('webrtc')">
+        <div class="mode-btn-label">WebRTC <span class="mode-badge badge-webrtc">FAST</span></div>
+        <div class="mode-btn-sub">~200ms · Google Meet quality</div>
+      </button>
+      <button class="mode-btn" data-mode="jpeg" onclick="selectMode('jpeg')">
+        <div class="mode-btn-label">JPEG <span class="mode-badge badge-jpeg">COMPAT</span></div>
+        <div class="mode-btn-sub">~1-3s · Works everywhere</div>
+      </button>
+    </div>
+
+    <div class="res-row">
+      <span class="res-label">Quality</span>
+      <div class="res-btns">
+        <button class="res-btn" data-res="720p" onclick="selectRes('720p')">720p</button>
+        <button class="res-btn active" data-res="1080p" onclick="selectRes('1080p')">1080p</button>
+        <button class="res-btn" data-res="4k" onclick="selectRes('4k')">4K</button>
+      </div>
+    </div>
+
+    <button class="btn-start" id="btn-start">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      Start Sharing
+    </button>
+    <div class="step-status" id="step-status"></div>
+    <div class="idle-reqs">
+      <div class="idle-req"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg>Use Chrome or Edge — screen capture is not supported in Safari</div>
+      <div class="idle-req"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>Supports up to 50 viewers simultaneously</div>
+      <div class="idle-req"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Encrypted — video is never stored on any server</div>
+    </div>
+  </div>
+
+  <div id="sharing-screen">
+    <div class="grid-2x2">
+      <div class="card">
+        <div class="card-label">Room Code</div>
+        <div class="room-code-display" id="room-code">------</div>
+        <div class="viewers-row">
+          <div class="viewer-dot"></div>
+          <span class="viewers-count" id="viewer-count">0</span>
+          <span class="viewers-label">&nbsp;viewers connected</span>
+          <div class="viewer-pills" id="viewer-pills"></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Scan to View</div>
+        <div id="qr-container"></div>
+        <div class="viewer-url-wrap">
+          <div class="viewer-url-label">Viewer URL</div>
+          <div class="viewer-url" id="viewer-url"></div>
+          <button class="copy-btn" id="copy-btn">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            Copy link
+          </button>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">How to Connect</div>
+        <div class="steps">
+          <div class="step"><div class="step-n">1</div>Scan the QR code or open the viewer URL on any device</div>
+          <div class="step"><div class="step-n">2</div>Enter the 6-character room code shown above</div>
+          <div class="step"><div class="step-n">3</div>Your screen appears instantly — no app needed</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-label">Stream Info <div class="live-badge"><div class="viewer-dot" style="margin:0"></div>&nbsp;LIVE</div></div>
+        <div class="stats-grid">
+          <div class="stat"><div class="stat-val" id="stat-res">—</div><div class="stat-name">Resolution</div></div>
+          <div class="stat"><div class="stat-val" id="stat-fps">—</div><div class="stat-name">Frame rate</div></div>
+          <div class="stat"><div class="stat-val" id="stat-viewers">0</div><div class="stat-name">Viewers</div></div>
+          <div class="stat"><div class="stat-val" id="stat-mode-display">—</div><div class="stat-name">Mode</div></div>
+        </div>
+      </div>
+    </div>
+    <div class="toolbar">
+      <div>
+        <div class="timer" id="timer">00:00</div>
+        <div class="timer-label">Session duration</div>
+      </div>
+      <button class="btn-stop" id="btn-stop">
+        <svg viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+        Stop Sharing
+      </button>
+    </div>
+  </div>
+</main>
+<div id="error-toast"></div>
+<script>
+  const isSafari = /^((?!chrome|android).)*safari/i.test(navigator.userAgent);
+  const isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+  if (isSafari || isFirefox) document.getElementById('browser-warn').classList.add('show');
+
+  let selectedMode = 'webrtc';
+  let selectedRes = '1080p';
+  const RES_MAP = {
+    '720p':  { width: 1280, height: 720,  frameRate: 30, bitrate: 2_500_000 },
+    '1080p': { width: 1920, height: 1080, frameRate: 30, bitrate: 6_000_000 },
+    '4k':    { width: 3840, height: 2160, frameRate: 30, bitrate: 15_000_000 },
+  };
+  function selectRes(res) {
+    selectedRes = res;
+    document.querySelectorAll('.res-btn').forEach(b => b.classList.toggle('active', b.dataset.res === res));
+  }
+  let room = null, screenTrack = null, timerInterval = null, statsInterval = null;
+  // JPEG state
+  let jpegWs = null, jpegStream = null, jpegCapturing = false, jpegViewerCount = 0;
+  const $ = id => document.getElementById(id);
+
+  function selectMode(mode) {
+    selectedMode = mode;
+    document.querySelectorAll('.mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
+  }
+
+  function setStatus(state, label) {
+    $('status-dot').className = 'status-dot' + (state ? ' ' + state : '');
+    $('status-label').textContent = label;
+  }
+  function setStep(msg) { $('step-status').textContent = msg; }
+  function showError(msg) {
+    const t = $('error-toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 6000);
+  }
+  function startTimer() {
+    const start = Date.now();
+    timerInterval = setInterval(() => {
+      const s = Math.floor((Date.now() - start) / 1000);
+      $('timer').textContent = `${String(Math.floor(s/60)).padStart(2,'0')}:${String(s%60).padStart(2,'0')}`;
+    }, 1000);
+  }
+  function drawQR(canvas, url) {
+    const container = document.getElementById('qr-container');
+    if (!container) return;
+    container.innerHTML = '';
+    try {
+      new QRCode(container, {
+        text: url,
+        width: 200,
+        height: 200,
+        colorDark: '#000000',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.M
+      });
+    } catch(e) {
+      container.innerHTML = '<div style="padding:8px;font-size:11px;color:#666;word-break:break-all;">' + url + '</div>';
+    }
+  }
+  function updateViewerUI(count) {
+    $('viewer-count').textContent = count;
+    $('stat-viewers').textContent = count;
+    const pills = $('viewer-pills');
+    pills.innerHTML = '';
+    for (let i = 0; i < Math.min(count, 5); i++) {
+      pills.innerHTML += `<div class="pill"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg></div>`;
+    }
+    if (count > 5) pills.innerHTML += `<div class="pill" style="font-size:9px;color:var(--text-4);">+${count-5}</div>`;
+  }
+  function withTimeout(promise, ms, msg) {
+    return Promise.race([promise, new Promise((_, r) => setTimeout(() => r(new Error(msg)), ms))]);
+  }
+  function startStats() {
+    statsInterval = setInterval(() => {
+      if (!room) return;
+      try {
+        const _tpubs = room.localParticipant.trackPublications;
+          const _pubList = (_tpubs instanceof Map) ? [..._tpubs.values()] : Object.values(_tpubs || {});
+          for (const pub of _pubList) {
+          if (pub.kind === 'video' && pub.track) {
+            const s = pub.track.mediaStreamTrack?.getSettings?.() || {};
+            if (s.width && s.height) $('stat-res').textContent = `${s.width}x${s.height}`;
+            if (s.frameRate) $('stat-fps').textContent = `${Math.round(s.frameRate)}fps`;
+          }
+        }
+      } catch(_) {}
+    }, 2000);
+  }
+  function showSharingUI(code, viewerUrl) {
+    $('room-code').textContent = code;
+    $('viewer-url').textContent = viewerUrl;
+    drawQR(null, viewerUrl);
+    updateViewerUI(0);
+    $('copy-btn').onclick = () => {
+      navigator.clipboard.writeText(viewerUrl).then(() => {
+        $('copy-btn').textContent = '✓ Copied!';
+        setTimeout(() => {
+          $('copy-btn').innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> Copy link`;
+        }, 2000);
+      });
+    };
+    $('idle-screen').style.display = 'none';
+    $('sharing-screen').classList.add('active');
+    setStatus('connected', 'Live');
+    startTimer();
+  }
+
+  // ── WebRTC (LiveKit) flow ─────────────────────────────────────────────────
+  async function startWebRTC() {
+    const res = await fetch('/api/create-room', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'webrtc' }) });
+    if (!res.ok) throw new Error('Server error');
+    const { code, token, livekitUrl } = await res.json();
+
+    setStep('A dialog will open — select your screen or window…');
+    let screenTracks;
+    try {
+      const resConfig = RES_MAP[selectedRes];
+      screenTracks = await LivekitClient.createLocalScreenTracks({
+        audio: false,
+        resolution: { width: resConfig.width, height: resConfig.height, frameRate: resConfig.frameRate }
+      });
+    } catch(e) { throw new Error('Screen capture cancelled — please try again'); }
+    if (!screenTracks?.length) throw new Error('No screen selected');
+
+    setStep('Connecting to streaming server…');
+    room = new LivekitClient.Room({ adaptiveStream: true, dynacast: true });
+    room.on(LivekitClient.RoomEvent.ParticipantConnected, () => updateViewerUI(room.remoteParticipants.size));
+    room.on(LivekitClient.RoomEvent.ParticipantDisconnected, () => updateViewerUI(room.remoteParticipants.size));
+    room.on(LivekitClient.RoomEvent.Disconnected, stopSharing);
+    await withTimeout(room.connect(livekitUrl, token), 15000, 'Could not reach the streaming server — check your connection');
+
+    setStep('Starting your stream…');
+    for (const track of screenTracks) {
+      await withTimeout(
+        room.localParticipant.publishTrack(track, {
+          source: LivekitClient.Track.Source.ScreenShare,
+          simulcast: false,
+          videoEncoding: { maxBitrate: resConfig.bitrate, maxFramerate: resConfig.frameRate }
+        }),
+        20000, 'Stream failed to start — please try again'
+      );
+      screenTrack = track;
+      track.mediaStreamTrack.addEventListener('ended', stopSharing);
+    }
+
+    const infoRes = await fetch('/api/info');
+    const { url } = await infoRes.json();
+    $('stat-mode-display').textContent = 'WebRTC';
+    $('stat-res').textContent = '—'; $('stat-fps').textContent = '—';
+    showSharingUI(code, `${url}/viewer.html?code=${code}`);
+    startStats();
+  }
+
+  // ── JPEG (WebSocket canvas) flow ──────────────────────────────────────────
+  async function startJPEG() {
+    const res = await fetch('/api/create-room', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ mode: 'jpeg' }) });
+    if (!res.ok) throw new Error('Server error');
+    const { code } = await res.json();
+
+    setStep('A dialog will open — select your screen or window…');
+    let stream;
+    try {
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always', frameRate: 30 }, audio: false });
+    } catch(e) { throw new Error('Screen capture cancelled — please try again'); }
+    jpegStream = stream;
+
+    setStep('Connecting to streaming server…');
+    const wsProto = location.protocol === 'https:' ? 'wss' : 'ws';
+    jpegWs = await new Promise((resolve, reject) => {
+      const ws = new WebSocket(`${wsProto}://${location.host}/ws?code=${code}&role=broadcaster`);
+      ws.onopen = () => resolve(ws);
+      ws.onerror = () => reject(new Error('Could not reach the streaming server'));
+      setTimeout(() => reject(new Error('Connection timeout')), 10000);
+    });
+
+    const video = document.createElement('video');
+    video.srcObject = stream;
+    video.muted = true;
+    video.play();
+    await new Promise(r => video.addEventListener('loadedmetadata', r, { once: true }));
+
+    const canvas = document.createElement('canvas');
+    const ctx = canvas.getContext('2d');
+    const track = stream.getVideoTracks()[0];
+    track.addEventListener('ended', stopSharing);
+    jpegCapturing = true;
+    jpegViewerCount = 0;
+
+    // Viewer count via ping messages
+    jpegWs.onmessage = (e) => {
+      try {
+        const msg = JSON.parse(e.data);
+        if (msg.type === 'viewer-count') { jpegViewerCount = msg.count; updateViewerUI(msg.count); }
+      } catch(_) {}
+    };
+    jpegWs.onclose = () => { if (jpegCapturing) stopSharing(); };
+
+    // Capture loop
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    (async () => {
+      while (jpegCapturing && jpegWs?.readyState === WebSocket.OPEN) {
+        if (jpegWs.bufferedAmount === 0 && video.videoWidth) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          ctx.drawImage(video, 0, 0);
+          canvas.toBlob(blob => {
+            if (blob && jpegWs?.readyState === WebSocket.OPEN && jpegWs.bufferedAmount === 0) {
+              jpegWs.send(blob);
+              const s = track.getSettings();
+              if (s.width) $('stat-res').textContent = `${s.width}x${s.height}`;
+            }
+          }, 'image/jpeg', 0.75);
+        }
+        await sleep(33);
+      }
+    })();
+
+    const infoRes = await fetch('/api/info');
+    const { url } = await infoRes.json();
+    $('stat-mode-display').textContent = 'JPEG';
+    $('stat-fps').textContent = '~30fps';
+    showSharingUI(code, `${url}/viewer.html?code=${code}`);
+  }
+
+  $('btn-start').addEventListener('click', async () => {
+    if (isSafari || isFirefox) { showError('Please use Chrome or Edge to share your screen.'); return; }
+    const btn = $('btn-start');
+    btn.disabled = true;
+    setStatus('connecting', 'Connecting…');
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><circle cx="12" cy="12" r="10"/><polyline points="12 8 12 12 14 14"/></svg> Setting up…`;
+    try {
+      setStep('Setting up room…');
+      if (selectedMode === 'webrtc') {
+        await startWebRTC();
+      } else {
+        await startJPEG();
+      }
+    } catch(err) {
+      showError(err.message || 'Failed to start sharing');
+      setStep('');
+      btn.disabled = false;
+      btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Sharing`;
+      setStatus('', 'Ready');
+      if (room) { try { room.disconnect(); } catch(_){} room = null; }
+      if (jpegWs) { try { jpegWs.close(); } catch(_){} jpegWs = null; }
+      if (jpegStream) { jpegStream.getTracks().forEach(t => t.stop()); jpegStream = null; }
+      jpegCapturing = false;
+    }
+  });
+
+  function stopSharing() {
+    clearInterval(timerInterval); clearInterval(statsInterval);
+    // WebRTC cleanup
+    if (screenTrack) { try { screenTrack.stop(); } catch(_){} screenTrack = null; }
+    if (room) { try { room.disconnect(); } catch(_){} room = null; }
+    // JPEG cleanup
+    jpegCapturing = false;
+    if (jpegWs) { try { jpegWs.close(); } catch(_){} jpegWs = null; }
+    if (jpegStream) { jpegStream.getTracks().forEach(t => t.stop()); jpegStream = null; }
+
+    $('sharing-screen').classList.remove('active');
+    $('idle-screen').style.display = 'flex';
+    $('timer').textContent = '00:00';
+    $('stat-res').textContent = '—'; $('stat-fps').textContent = '—';
+    const btn = $('btn-start');
+    btn.disabled = false;
+    btn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="16" height="16"><polygon points="5 3 19 12 5 21 5 3"/></svg> Start Sharing`;
+    setStatus('', 'Ready');
+  }
+  $('btn-stop').addEventListener('click', stopSharing);
+</script>
+</body>
+</html>

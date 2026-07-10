@@ -1,0 +1,20 @@
+{
+  "name": "wifiscreen-server",
+  "version": "2.0.0",
+  "description": "WiFi screen sharing - LiveKit powered signaling server",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "ws": "^8.18.0",
+    "dotenv": "^17.4.2",
+    "express": "^4.19.2",
+    "livekit-server-sdk": "^2.6.0"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.4"
+  }
+}

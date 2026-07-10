@@ -1,0 +1,30 @@
+# LiveKit Server Configuration
+# Place this file on your VPS at: ~/wifiscreen/livekit.yaml
+# Start with: livekit-server --config livekit.yaml
+
+port: 7880
+rtc:
+  tcp_port: 7881
+  udp_port: 7882
+  port_range_start: 50000
+  port_range_end: 60000
+  use_external_ip: true      # Auto-detect VPS external IP for WebRTC
+
+# API keys — change these before deploying!
+# Must match LIVEKIT_API_KEY and LIVEKIT_API_SECRET in your .env
+keys:
+  devkey: devsecret000000000000000000000000
+
+logging:
+  level: info
+
+# Optional: limit room size
+room:
+  max_participants: 51       # 1 broadcaster + 50 viewers
+
+# Optional: turn server (use if UDP is blocked on your network)
+# turn:
+#   enabled: true
+#   domain: your-domain.com
+#   tls_port: 443
+#   udp_port: 3478

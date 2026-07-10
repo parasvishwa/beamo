@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Beamo — WiFi Screen Sharing</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #09090b;
+      --bg-2:    #111113;
+      --bg-3:    #1c1c1f;
+      --border:  #27272a;
+      --text:    #fafafa;
+      --text-2:  #d4d4d8;
+      --text-4:  #71717a;
+      --accent:  #22d3ee;
+      --accent-dim: rgba(34,211,238,0.08);
+      --accent-glow: rgba(34,211,238,0.18);
+      --ease:    cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    html, body {
+      min-height: 100dvh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+      gap: 48px;
+    }
+
+    /* ── Logo ── */
+    .logo {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      text-align: center;
+    }
+    .logo-mark {
+      width: 52px;
+      height: 52px;
+      background: var(--accent);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 32px rgba(34,211,238,0.25);
+    }
+    .logo-mark svg { width: 28px; height: 28px; }
+    .logo-name {
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.05em;
+      color: var(--text);
+    }
+    .logo-tag {
+      font-size: 14px;
+      color: var(--text-4);
+      letter-spacing: 0.01em;
+      line-height: 1.5;
+    }
+
+    /* ── Cards ── */
+    .cards {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 14px;
+      width: 100%;
+      max-width: 560px;
+    }
+    @media (max-width: 480px) {
+      .cards { grid-template-columns: 1fr; }
+    }
+    .card {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      background: var(--bg-2);
+      border: 1px solid var(--border);
+      border-radius: 18px;
+      padding: 28px 24px;
+      text-decoration: none;
+      color: inherit;
+      position: relative;
+      overflow: hidden;
+      transition: border-color 0.25s var(--ease), box-shadow 0.25s var(--ease), transform 0.2s var(--ease);
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--accent-dim);
+      opacity: 0;
+      transition: opacity 0.25s ease;
+    }
+    .card:hover {
+      border-color: rgba(34,211,238,0.35);
+      box-shadow: 0 0 0 1px rgba(34,211,238,0.12), 0 8px 32px rgba(0,0,0,0.4);
+      transform: translateY(-2px);
+    }
+    .card:hover::before { opacity: 1; }
+    .card:active { transform: translateY(0); }
+
+    .card-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 11px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      z-index: 1;
+    }
+    .card-icon svg { width: 22px; height: 22px; }
+    .card-icon.broadcast {
+      background: rgba(34,211,238,0.12);
+      border: 1px solid rgba(34,211,238,0.22);
+      color: var(--accent);
+    }
+    .card-icon.view {
+      background: rgba(139,92,246,0.12);
+      border: 1px solid rgba(139,92,246,0.22);
+      color: #a78bfa;
+    }
+
+    .card-body { position: relative; z-index: 1; }
+    .card-title {
+      font-size: 17px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      margin-bottom: 5px;
+    }
+    .card-sub {
+      font-size: 13px;
+      color: var(--text-4);
+      line-height: 1.55;
+    }
+
+    .card-arrow {
+      position: absolute;
+      bottom: 22px;
+      right: 22px;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s var(--ease);
+      z-index: 1;
+    }
+    .card-arrow svg { width: 13px; height: 13px; color: var(--text-4); }
+    .card:hover .card-arrow {
+      background: var(--accent);
+      border-color: var(--accent);
+      transform: translate(1px, -1px);
+    }
+    .card:hover .card-arrow svg { color: #000; }
+
+    /* ── Footer hint ── */
+    .hint {
+      font-size: 12px;
+      color: var(--text-4);
+      text-align: center;
+      line-height: 1.6;
+    }
+    .hint code {
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      background: var(--bg-3);
+      border: 1px solid var(--border);
+      border-radius: 4px;
+      padding: 1px 6px;
+      font-size: 11px;
+      color: var(--accent);
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .card, .card-arrow { transition: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="logo">
+    <div class="logo-mark">
+      <svg viewBox="0 0 15 15" fill="none">
+        <path d="M7.5 2.5C4.9 2.5 2.6 3.8 1.2 5.8L2.6 6.8C3.7 5.2 5.5 4.2 7.5 4.2C9.5 4.2 11.3 5.2 12.4 6.8L13.8 5.8C12.4 3.8 10.1 2.5 7.5 2.5Z" fill="#000"/>
+        <path d="M7.5 5.8C6 5.8 4.6 6.5 3.7 7.6L5.1 8.6C5.7 7.8 6.5 7.5 7.5 7.5C8.5 7.5 9.3 7.8 9.9 8.6L11.3 7.6C10.4 6.5 9 5.8 7.5 5.8Z" fill="#000"/>
+        <circle cx="7.5" cy="11.5" r="1.8" fill="#000"/>
+      </svg>
+    </div>
+    <div class="logo-name">Beamo</div>
+    <div class="logo-tag">Share your screen to any device — instantly, no app needed.</div>
+  </div>
+
+  <div class="cards">
+    <a class="card" href="/broadcaster.html">
+      <div class="card-icon broadcast">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+          <path d="M17 10l-5-5-5 5M12 5v9"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">Broadcast</div>
+        <div class="card-sub">Share your screen to viewers on any device</div>
+      </div>
+      <div class="card-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+      </div>
+    </a>
+
+    <a class="card" href="/viewer.html">
+      <div class="card-icon view">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <rect x="2" y="3" width="20" height="14" rx="2"/>
+          <path d="M8 21h8M12 17v4"/>
+          <path d="M8 12l4-4 4 4M12 8v8" transform="rotate(180 12 12)"/>
+        </svg>
+      </div>
+      <div class="card-body">
+        <div class="card-title">View</div>
+        <div class="card-sub">Watch a shared screen from any device</div>
+      </div>
+      <div class="card-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M7 17L17 7M17 7H7M17 7v10"/></svg>
+      </div>
+    </a>
+  </div>
+
+  <p class="hint">On Smart TV, type <code>beamo.imazyn.com/XXXXXX</code> to join directly</p>
+
+</body>
+</html>
