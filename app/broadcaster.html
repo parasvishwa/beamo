@@ -336,9 +336,9 @@
     const { code, token, livekitUrl } = await res.json();
 
     setStep('A dialog will open — select your screen or window…');
+    const resConfig = RES_MAP[selectedRes];
     let screenTracks;
     try {
-      const resConfig = RES_MAP[selectedRes];
       screenTracks = await LivekitClient.createLocalScreenTracks({
         audio: false,
         resolution: { width: resConfig.width, height: resConfig.height, frameRate: resConfig.frameRate }
@@ -382,9 +382,9 @@
     const { code } = await res.json();
 
     setStep('A dialog will open — select your screen or window…');
+    const resConfig = RES_MAP[selectedRes];
     let stream;
     try {
-      const resConfig = RES_MAP[selectedRes];
       stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always", width: { ideal: resConfig.width }, height: { ideal: resConfig.height }, frameRate: { ideal: resConfig.frameRate } }, audio: false });
     } catch(e) { throw new Error('Screen capture cancelled — please try again'); }
     jpegStream = stream;
