@@ -384,7 +384,8 @@
     setStep('A dialog will open — select your screen or window…');
     let stream;
     try {
-      stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: 'always', frameRate: 30 }, audio: false });
+      const resConfig = RES_MAP[selectedRes];
+      stream = await navigator.mediaDevices.getDisplayMedia({ video: { cursor: "always", width: { ideal: resConfig.width }, height: { ideal: resConfig.height }, frameRate: { ideal: resConfig.frameRate } }, audio: false });
     } catch(e) { throw new Error('Screen capture cancelled — please try again'); }
     jpegStream = stream;
 
